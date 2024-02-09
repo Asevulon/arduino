@@ -76,6 +76,8 @@ void MyDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_EDIT4, m_Lun);
 	DDX_Text(pDX, IDC_EDIT5, m_Hue);
 	DDX_Text(pDX, IDC_EDIT6, m_Sat);
+	DDX_Control(pDX, IDC_MODE_LIST, ModeList);
+	DDX_Control(pDX, IDC_SLIDER1, EffectT);
 }
 
 BEGIN_MESSAGE_MAP(MyDlg, CDialogEx)
@@ -93,6 +95,8 @@ BEGIN_MESSAGE_MAP(MyDlg, CDialogEx)
 	ON_EN_CHANGE(IDC_EDIT4, &MyDlg::OnEnChangeEdit4)
 	ON_EN_CHANGE(IDC_EDIT5, &MyDlg::OnEnChangeEdit5)
 	ON_EN_CHANGE(IDC_EDIT6, &MyDlg::OnEnChangeEdit6)
+	ON_CBN_SELCHANGE(IDC_MODE_LIST, &MyDlg::OnCbnSelchangeModeList)
+	ON_NOTIFY(NM_CUSTOMDRAW, IDC_SLIDER1, &MyDlg::OnNMCustomdrawSlider1)
 END_MESSAGE_MAP()
 
 
@@ -169,6 +173,13 @@ BOOL MyDlg::OnInitDialog()
 	LunCtrl.SetColor(RGB(50, 50, 50));
 	LunCtrl.SetType(CMFCColorPickerCtrl::COLORTYPE::LUMINANCE);
 	LunCtrl.SetPalette(&palette1);
+
+	ModeList.InsertString(-1, L"Статический");
+	ModeList.InsertString(-1, L"Водопад");
+	ModeList.SetCurSel(0);
+
+	EffectT.SetRange(1, 20);
+	EffectT.SetPos(7);
 	return TRUE;  // возврат значения TRUE, если фокус не передан элементу управления
 }
 
@@ -246,7 +257,7 @@ void MyDlg::OnBnClickedButtonConnect()
 		MessageBox(L"getting state error", L"Error", MB_ICONERROR);
 		return;
 	}
-	dcbSerialParams.BaudRate = CBR_9600;
+	dcbSerialParams.BaudRate = CBR_115200;
 	dcbSerialParams.ByteSize = 8;
 	dcbSerialParams.StopBits = ONESTOPBIT;
 	dcbSerialParams.Parity = NOPARITY;
@@ -424,4 +435,31 @@ void MyDlg::OnEnChangeEdit6()
 	led->SetColor(LunCtrl.GetColor());
 	if (!led->MakeAndSend())ProcessError();
 	UpdateEditControls();
+}
+
+
+void MyDlg::OnCbnSelchangeModeList()
+{
+	// TODO: добавьте свой код обработчика уведомлений
+	if (!init)return;
+	CString curmode;
+	ModeList.GetWindowTextW(curmode);
+
+	if (curmode == L"Статический")led->SetMode(Static);
+	else if (curmode == L"Водопад")led->SetMode(Waterfall);
+
+	if (!led->MakeAndSend())ProcessError();
+}
+
+
+void MyDlg::OnNMCustomdrawSlider1(NMHDR* pNMHDR, LRESULT* pResult)
+{
+	LPNMCUSTOMDRAW pNMCD = reinterpret_cast<LPNMCUSTOMDRAW>(pNMHDR);
+	// TODO: добавьте свой код обработчика уведомлений
+	*pResult = 0;
+
+	if (!init)return;
+
+	led->SetEffectT(EffectT.GetPos());
+	if (!led->MakeAndSend())ProcessError();
 }

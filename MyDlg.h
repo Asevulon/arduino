@@ -66,4 +66,8 @@ public:
 	afx_msg void OnEnChangeEdit4();
 	afx_msg void OnEnChangeEdit5();
 	afx_msg void OnEnChangeEdit6();
+	CComboBox ModeList;
+	afx_msg void OnCbnSelchangeModeList();
+	CSliderCtrl EffectT;
+	afx_msg void OnNMCustomdrawSlider1(NMHDR* pNMHDR, LRESULT* pResult);
 };
